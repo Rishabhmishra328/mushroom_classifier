@@ -1,39 +1,68 @@
 import tensorflow as tf
-import data_handler as dh
+import pandas as pd
+import numpy as np
+
+#data handler
+# loading data
+df_data = pd.read_csv('mushrooms.csv')
+    
+#creating label assignments
+entry_map = {}
+
+# changing labels to numbers
+for key in df_data.keys():
+    entry_map[key] = df_data[key].unique().tolist()
+    
+for key in entry_map.keys():
+    for value in entry_map[key]: 
+        df_data.loc[df_data[key]==value, key] = entry_map[key].index(value)
+
+def map():
+    return(entry_map)
+
+def df():
+    return (df_data)
+
+def input_layer_length():
+    # length of feature minus the label
+    return(len(entry_map) - 1)
+
+
 
 # importing data
-csv_data = dh.df()
-dict_map = dh.map()
-train_data, test_data = dh.network_data()
-ill = dh.input_layer_length()
+train_data, test_data = df_data[102:].drop('class', axis = 1).values.astype(np.float32), df_data[1:101].drop('class', axis = 1).values.astype(np.float32)
+# print(np.array(test_data))
+train_labels, test_labels = df_data.loc[102:, 'class'].values.astype(np.float32), df_data.loc[1:101, 'class'].values.astype(np.float32)
+# print(test_labels)
+
+ill = input_layer_length()
 
 # params
 learning_rate = 0.05
 epochs = 100
-batch = 50
+batch = 100
 display_step = 2
 
 def train():
     x = tf.placeholder(tf.float32,[None,ill])
-    y = tf.placeholder9tf.float32,[None,2]
+    y = tf.placeholder(tf.float32,[None,2])
 
     #model
     W = tf.Variable(tf.zeros([ill,2]))
     b = tf.Variable(tf.zeros([2]))
 
 
-    with tf.name_scope('Wx_b') as scope:
-        #linear model
-        model = tf.nn.softmax(tf.matmul(x, W) + b)
+    #linear model
+    model = tf.nn.softmax(tf.matmul(x, W) + b)
 
 
-    with tf.name_scope('cost_function') as scope:
-        #cross entropy
-        cost_function = -tf.reduce_sum(y * tf.log(model))
 
-    with tf.name_scope('train') as scope:
-        #gradient descent
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost_function)
+    #cross entropy
+    cost_function = -tf.reduce_sum(y * tf.log(model))
+
+
+    #gradient descent
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost_function)
 
     #initializing
     init = tf.global_variables_initializer()
@@ -45,10 +74,20 @@ def train():
         #training
         for iteration in range (epochs):
             avg_cost = 0.
-            total_batch = len(train_data)/batch
+            x, y = train_data, train_labels
+            # print(str(train_data))
+            # print(train_labels)
+            total_batch = (int)(x.size / (batch * 22))
+            print(total_batch)
+            batch_index = 0
+
             #looping over batches
             for i in range(total_batch):
-                batch_x, batch_y = get_next_batch(batch)
+                # print(x[batch_index:(batch_index + batch)])
+                batch_x, batch_y = tf.convert_to_tensor(x[batch_index:(batch_index + batch)]), tf.convert_to_tensor(y[batch_index:(batch_index + batch)])
+                print(type(batch_x)clear
+                    , batch_y)
+                batch_index += batch
                 #fitting data
                 sess.run(optimizer, feed_dict = {x: batch_x, y: batch_y})
                 #calculating total loss
@@ -60,10 +99,10 @@ def train():
         print('Training complete')
 
         #testing
-        predictions = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1)) 
+        # predictions = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1)) 
         #accuracy
-        accuracy = tf.reduce_mean(tf.cast(predictions, 'float'))
-        print('Accuracy : ', accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+        # accuracy = tf.reduce_mean(tf.cast(predictions, 'float'))
+        # print('Accuracy : ', accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
 
 train()
 
