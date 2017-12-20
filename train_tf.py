@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # params
-learning_rate = 0.05
+learning_rate = 0.0001
 epochs = 150
 display_step = 10
 
@@ -18,60 +18,43 @@ entry_map = {}
 for key in df_data.keys():
     entry_map[key] = df_data[key].unique().tolist()
 
-# print(entry_map)
-    
-for key in entry_map.keys():
-    # print(df_data[key])
-    input_key_data = []
-    # print(df_data[key])
-    for data_line in df_data[key]:
-        input_key_data = [1. if i == entry_map[key].index(data_line) else 0. for i in range(len(entry_map[key]))]
-        print(input_key_data)
+data_array_collector = []
+test_data_array_collector = []
+key_counter = 0
+keys_for_data = df_data.keys().tolist()
+keys_for_data.remove('class')
+for key in keys_for_data:
+    if key_counter == 0:
+        data_array_collector = [np.array([1. if i == entry_map[key].index(data_line) else 0. for i in range(len(entry_map[key]))]) for data_line in df_data[key][101:]]
+        test_data_array_collector = [np.array([1. if i == entry_map[key].index(data_line) else 0. for i in range(len(entry_map[key]))]) for data_line in df_data[key][:100]]
+    else:
+        entry_array = [np.array([1. if i == entry_map[key].index(data_line) else 0. for i in range(len(entry_map[key]))]) for data_line in df_data[key][101:]]
+        data_array_collector = np.c_[data_array_collector, entry_array]
+        test_entry_array = [np.array([1. if i == entry_map[key].index(data_line) else 0. for i in range(len(entry_map[key]))]) for data_line in df_data[key][:100]]
+        test_data_array_collector = np.c_[test_data_array_collector, test_entry_array]
+    key_counter += 1
 
-    # for value in entry_map[key]: 
-    #     print(input_key_data)
-    #     # data
-    #     df_data.loc[df_data[key]==value, key] = entry_map[key].index(value)
+label_array_collector = np.array([[1. if i == entry_map['class'].index(data_line) else 0. for i in range(2)] for data_line in df_data['class'][101:]])
+test_label_array_collector = np.array([[1. if i == entry_map['class'].index(data_line) else 0. for i in range(2)] for data_line in df_data['class'][:100]])
 
-# importing data
-train_data, test_data = df_data[102:].drop('class', axis = 1).values.astype(np.float32), df_data[1:101].drop('class', axis = 1).values.astype(np.float32)
-# print(np.array(test_data))
-train_label_data, test_label_data = df_data.loc[102:, 'class'].values, df_data.loc[1:100, 'class'].values
-train_labels, test_labels = np.zeros((len(train_label_data), 2)), np.zeros((len(test_label_data), 2))
-label_counter = 0
+print('input : ', data_array_collector[0])
+print('output : ', label_array_collector[0])
 
-r = [i for i in range(len(test_label_data))]
-c = [i for i in test_label_data]
-test_labels[r, c] = 1.
+print('input : ', test_data_array_collector[0])
+print('output : ', test_label_array_collector[0])
 
-r = [i for i in range(len(train_label_data))]
-c = [i for i in train_label_data]
-train_labels[r, c] = 1.
-
-def map():
-    return(entry_map)
-
-def get_data():
-
-    return (df_data)
-
-def input_layer_length():
-    # length of feature minus the label
-    return(len(entry_map) - 1)
-
-ill = input_layer_length()
 
 def train():
-    x = tf.placeholder(tf.float32, [None, ill])
-    y = tf.placeholder(tf.float32, [None, 2])
+    x = tf.placeholder(tf.float32, [None, data_array_collector.shape[1]])
+    y = tf.placeholder(tf.float32, [None, label_array_collector.shape[1]])
 
     #model
-    W = tf.Variable(tf.zeros([ill,2]))
-    b = tf.Variable(tf.zeros([2]))
+    W = tf.Variable(tf.zeros([data_array_collector.shape[1],label_array_collector.shape[1]]))
+    b = tf.Variable(tf.zeros([label_array_collector.shape[1]]))
     #linear model
     model = tf.nn.softmax(tf.matmul(x, W) + b)
     #cross entropy
-    cost_function = -tf.reduce_sum(y * tf.log(model))
+    cost_function = -tf.reduce_sum(y * tf.log(model + 1e-10))
     #gradient descent
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost_function)
     #initializing
@@ -84,9 +67,9 @@ def train():
         for iteration in range (epochs):
             avg_cost = 0.
             #fitting data
-            sess.run(optimizer, feed_dict={x: train_data, y: train_labels})
+            sess.run(optimizer, feed_dict={x: data_array_collector, y: label_array_collector})
             #calculating total loss
-            avg_cost += sess.run(cost_function, feed_dict={x: train_data, y: train_labels})/epochs
+            avg_cost += sess.run(cost_function, feed_dict={x: data_array_collector, y: label_array_collector})/epochs
             #display logs each iteration
             if iteration % display_step == 0 :
                 print('Iteration : ', '%04d' % (iteration + 1), 'cost = ', avg_cost)
@@ -94,10 +77,10 @@ def train():
         print('Training complete')
 
         #testing
-        # predictions = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1)) 
+        predictions = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1)) 
         #accuracy
-        # accuracy = tf.reduce_mean(tf.cast(predictions, 'float'))
-        # print('Accuracy : ', accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+        accuracy = tf.reduce_mean(tf.cast(predictions, 'float'))
+        print('Accuracy : ', accuracy.eval({x: test_data_array_collector, y: test_label_array_collector}), 'Predictions : ', predictions.eval({x: test_data_array_collector, y: test_label_array_collector}))
 
 train()
 
