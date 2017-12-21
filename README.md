@@ -79,7 +79,9 @@ pip install numpy
 ## Requirements
 
 -Tensorflow
+
 -Numpy
+
 -Pandas
 
 ## To run
