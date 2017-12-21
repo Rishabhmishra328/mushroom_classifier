@@ -86,7 +86,7 @@ pip install numpy
 
 ## To run
 
-*Start the tensorflow environment using
+* Start the tensorflow environment using
 
 ```sh
 # start tensorflow
@@ -94,7 +94,7 @@ source ~/tensorflow/bin/activate      # If using bash, sh, ksh, or zsh
 source ~/tensorflow/bin/activate.csh  # If using csh or tcsh 
 ```
 
-*Once tensorflow is running, run train_tf.py
+* Once tensorflow is running, run train_tf.py
 ```sh
 # run mushroom classifier
 python train_tf.py
