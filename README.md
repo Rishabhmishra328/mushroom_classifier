@@ -58,7 +58,6 @@ NumPy is the fundamental package needed for scientific computing with Python.
 - **Website (including documentation):** http://www.numpy.org
 - **Mailing list:** https://mail.python.org/mailman/listinfo/numpy-discussion
 - **Source:** https://github.com/numpy/numpy
-- **Bug reports:** https://github.com/numpy/numpy/issues
 
 It provides:
 
@@ -79,9 +78,9 @@ pip install numpy
 
 ## Requirements
 
-*Tensorflow
-*Numpy
-*Pandas
+-Tensorflow
+-Numpy
+-Pandas
 
 ## To run
 
@@ -93,7 +92,7 @@ source ~/tensorflow/bin/activate      # If using bash, sh, ksh, or zsh
 source ~/tensorflow/bin/activate.csh  # If using csh or tcsh 
 ```
 
-#Once tensorflow is running, run train_tf.py
+*Once tensorflow is running, run train_tf.py
 ```sh
 # run mushroom classifier
 python train_tf.py
